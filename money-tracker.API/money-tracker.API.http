@@ -1,0 +1,6 @@
+@money_tracker.API_HostAddress = http://localhost:5101
+
+GET {{money_tracker.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
