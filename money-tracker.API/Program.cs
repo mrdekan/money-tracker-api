@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using money_tracker.Application.Interfaces;
+using money_tracker.Application.Services;
 using money_tracker.Domain.Entities;
 using money_tracker.Infrastructure.Data;
+using money_tracker.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,9 +42,24 @@ builder.Services.AddAuthentication(options =>
     }
 );
 
+builder.Services.AddHostedService<CurrenciesService>();
+
+builder.Services.AddScoped<IJarsService, JarsService>();
+builder.Services.AddScoped<IStoresService, StoresService>();
+
+builder.Services.AddScoped<JarsRepository>();
+builder.Services.AddScoped<CurrenciesRepository>();
+builder.Services.AddScoped<StoresRepository>();
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
 
 if (app.Environment.IsDevelopment())
 {

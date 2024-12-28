@@ -10,10 +10,10 @@ namespace money_tracker.Infrastructure.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<Jar> Jars { get; set; }
-        public DbSet<Card> Cards { get; set; }
         public DbSet<CurrencyBalance> CurrencyBalances { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Currency> Currencies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,8 +24,6 @@ namespace money_tracker.Infrastructure.Data
             modelBuilder.Entity<IdentityRole<int>>().ToTable("roles");
 
             modelBuilder.Entity<Jar>().ToTable("jars");
-
-            modelBuilder.Entity<Card>().ToTable("cards");
 
             modelBuilder.Entity<CurrencyBalance>().ToTable("currency_balances");
 
@@ -39,22 +37,10 @@ namespace money_tracker.Infrastructure.Data
                 .HasForeignKey(j => j.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Card>()
-                .HasOne(j => j.User)
-                .WithMany(u => u.Cards)
-                .HasForeignKey(j => j.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<Store>()
                 .HasOne(s => s.Jar)
                 .WithMany(j => j.Stores)
                 .HasForeignKey(s => s.JarId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Store>()
-                .HasOne(s => s.Card)
-                .WithMany(c => c.Stores)
-                .HasForeignKey(s => s.CardId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Transaction>()
@@ -80,6 +66,18 @@ namespace money_tracker.Infrastructure.Data
                 .WithMany(u => u.CurrencyBalances)
                 .HasForeignKey(cb => cb.StoreId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Jar>()
+               .HasOne(j => j.TargetCurrency)
+               .WithMany(c => c.TargetedJars)
+               .HasForeignKey(j => j.TargetCurrencyId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CurrencyBalance>()
+               .HasOne(cb => cb.Currency)
+               .WithMany(c => c.Balances)
+               .HasForeignKey(cb => cb.CurrencyId)
+               .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

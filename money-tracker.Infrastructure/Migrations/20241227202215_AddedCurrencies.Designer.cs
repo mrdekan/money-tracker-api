@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using money_tracker.Infrastructure.Data;
@@ -11,9 +12,11 @@ using money_tracker.Infrastructure.Data;
 namespace money_tracker.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241227202215_AddedCurrencies")]
+    partial class AddedCurrencies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,6 +157,34 @@ namespace money_tracker.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("money_tracker.Domain.Entities.Card", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("cards", (string)null);
+                });
+
             modelBuilder.Entity("money_tracker.Domain.Entities.Currency", b =>
                 {
                     b.Property<int>("Id")
@@ -251,6 +282,9 @@ namespace money_tracker.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CardId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("JarId")
                         .HasColumnType("integer");
 
@@ -259,7 +293,12 @@ namespace money_tracker.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CardId");
 
                     b.HasIndex("JarId");
 
@@ -421,6 +460,17 @@ namespace money_tracker.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("money_tracker.Domain.Entities.Card", b =>
+                {
+                    b.HasOne("money_tracker.Domain.Entities.User", "User")
+                        .WithMany("Cards")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("money_tracker.Domain.Entities.CurrencyBalance", b =>
                 {
                     b.HasOne("money_tracker.Domain.Entities.Currency", "Currency")
@@ -469,11 +519,18 @@ namespace money_tracker.Infrastructure.Migrations
 
             modelBuilder.Entity("money_tracker.Domain.Entities.Store", b =>
                 {
+                    b.HasOne("money_tracker.Domain.Entities.Card", "Card")
+                        .WithMany("Stores")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("money_tracker.Domain.Entities.Jar", "Jar")
                         .WithMany("Stores")
                         .HasForeignKey("JarId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Card");
 
                     b.Navigation("Jar");
                 });
@@ -495,6 +552,11 @@ namespace money_tracker.Infrastructure.Migrations
                     b.Navigation("Source");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("money_tracker.Domain.Entities.Card", b =>
+                {
+                    b.Navigation("Stores");
                 });
 
             modelBuilder.Entity("money_tracker.Domain.Entities.Currency", b =>
@@ -521,6 +583,8 @@ namespace money_tracker.Infrastructure.Migrations
 
             modelBuilder.Entity("money_tracker.Domain.Entities.User", b =>
                 {
+                    b.Navigation("Cards");
+
                     b.Navigation("CurrencyBalances");
 
                     b.Navigation("Jars");

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using money_tracker.Domain.Interfaces;
 
@@ -9,14 +10,10 @@ namespace money_tracker.Domain.Entities
         [Key]
         public int Id { get; set; }
 
-
-        [Required]
-        [StringLength(3, MinimumLength = 3, ErrorMessage = "Currency is 3 characters.")]
-        public string Currency { get; set; }
-
         [Required(ErrorMessage = "Balance is required")]
+        [Range(0, double.MaxValue, ErrorMessage = "Balance is not negative")]
+        [DefaultValue(0)]
         public decimal Balance { get; set; }
-
 
         [Required(ErrorMessage = "UserId is required.")]
         [ForeignKey("User")]
@@ -28,6 +25,10 @@ namespace money_tracker.Domain.Entities
         public int StoreId { get; set; }
         public Store Store { get; set; }
 
+        [Required(ErrorMessage = "CurrencyId is required.")]
+        [ForeignKey("Currency")]
+        public int CurrencyId { get; set; }
+        public Currency Currency { get; set; }
 
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using money_tracker.Domain.Enums;
 using money_tracker.Domain.Interfaces;
 
 namespace money_tracker.Domain.Entities
@@ -19,14 +18,6 @@ namespace money_tracker.Domain.Entities
         public int JarId { get; set; }
         public Jar Jar { get; set; }
 
-        [ForeignKey("Card")]
-        public int? CardId { get; set; }
-        public Card? Card { get; set; }
-
-        [Required(ErrorMessage = "Type is required.")]
-        public StoreTypes Type { get; set; }
-
         public ICollection<CurrencyBalance> CurrencyBalances { get; set; } = new List<CurrencyBalance>();
-
     }
 }
