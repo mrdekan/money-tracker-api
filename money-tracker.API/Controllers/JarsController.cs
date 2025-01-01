@@ -15,7 +15,8 @@ namespace money_tracker.API.Controllers
     {
         private readonly IJarsService _jarsService;
 
-        public JarsController(IJarsService jarsService, UserManager<User> userManager) : base(userManager)
+        public JarsController(IJarsService jarsService, UserManager<User> userManager)
+            : base(userManager)
         {
             _jarsService = jarsService;
         }
@@ -28,12 +29,28 @@ namespace money_tracker.API.Controllers
             {
                 return Unauthorized();
             }
+
             ServiceResult result = await _jarsService.AddJar(dto, user.Id);
-
             if (!result.Success)
-                return StatusCode(result.StatusCode ?? 400, result.ErrorMessage);
+                return StatusCode(result.StatusCode ?? 400, result);
 
-            return Ok();
+            return Ok(result);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetJar(int id)
+        {
+            var user = await GetCurrentUserAsync();
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            ServiceResult result = await _jarsService.GetJar(user.Id, id);
+            if (!result.Success)
+                return StatusCode(result.StatusCode ?? 400, result);
+
+            return Ok(result);
         }
 
         [HttpGet("")]
@@ -44,8 +61,44 @@ namespace money_tracker.API.Controllers
             {
                 return Unauthorized();
             }
-            var jars = await _jarsService.GetJars(user.Id);
-            return Ok(new { jars });
+
+            ServiceResult result = await _jarsService.GetJars(user.Id);
+            if (!result.Success)
+                return StatusCode(result.StatusCode ?? 400, result);
+
+            return Ok(result);
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateJar(UpdateJarDto dto, int id)
+        {
+            var user = await GetCurrentUserAsync();
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            ServiceResult result = await _jarsService.UpdateJar(dto, user.Id, id);
+            if (!result.Success)
+                return StatusCode(result.StatusCode ?? 400, result);
+
+            return Ok(result);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteJar(int id)
+        {
+            var user = await GetCurrentUserAsync();
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            ServiceResult result = await _jarsService.DeleteJar(user.Id, id);
+            if (!result.Success)
+                return StatusCode(result.StatusCode ?? 400, result);
+
+            return Ok(result);
         }
     }
 }

@@ -1,11 +1,16 @@
-﻿namespace money_tracker.Application.Dtos.Requests.Auth
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace money_tracker.Application.Dtos.Requests.Auth
 {
     public class SignUpDto
     {
+        [Required]
+        [EmailAddress]
+        [MaxLength(50, ErrorMessage = "Email min length is 50 characters")]
         public string Email { get; set; }
-        public string Username { get; set; }
-        public string Name { get; set; }
-        public string Surname { get; set; }
+        [Required]
+        [MinLength(8, ErrorMessage = "Password min length is 8 characters")]
+        [MaxLength(50, ErrorMessage = "Password min length is 50 characters")]
         public string Password { get; set; }
     }
 }

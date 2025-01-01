@@ -12,9 +12,37 @@ namespace money_tracker.Infrastructure.Repositories
             _context = context;
         }
 
+        public override async Task<Jar?> GetByIdAsync(int id)
+        {
+            return await _context.Jars
+                .Where(jar => jar.Id == id)
+                .Include(jar => jar.TargetCurrency)
+                .Include(jar => jar.Stores)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<Jar>> GetByUserId(int userId)
         {
-            return await _context.Jars.Where(jar => jar.UserId == userId).ToListAsync();
+            return await _context.Jars
+                .Where(jar => jar.UserId == userId)
+                .Include(jar => jar.TargetCurrency)
+                .Include(jar => jar.Stores)
+                .ToListAsync();
+        }
+
+        public async Task<Jar?> GetByStoreId(int storeId)
+        {
+            return await _context.Jars
+                .Include(jar => jar.Stores)
+                .Include(jar => jar.TargetCurrency)
+                .Where(jar => jar.Stores.First(s => s.Id == storeId) != null)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> IsNameTaken(string name, int userId)
+        {
+            Jar? jar = await _context.Jars.Where(j => j.Name == name && j.UserId == userId).FirstOrDefaultAsync();
+            return jar != null;
         }
     }
 }

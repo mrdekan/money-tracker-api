@@ -19,7 +19,7 @@ namespace money_tracker.Infrastructure.Data
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("Dev");
+            var connectionString = configuration.GetConnectionString("Default");
 
             optionsBuilder.UseNpgsql(connectionString);
 

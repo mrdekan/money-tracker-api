@@ -6,7 +6,9 @@ namespace money_tracker.Application.Interfaces
     public interface IJarsService
     {
         public Task<ServiceResult> AddJar(CreateJarDto dto, int userId);
-        public Task<ServiceResult> UpdateJar(UpdateJarDto dto, int userId, int jarId);
+        public Task<ServiceResult> GetJar(int userId, int jarId);
         public Task<ServiceResult> GetJars(int userId);
+        public Task<ServiceResult> UpdateJar(UpdateJarDto dto, int userId, int jarId);
+        public Task<ServiceResult> DeleteJar(int userId, int jarId);
     }
 }

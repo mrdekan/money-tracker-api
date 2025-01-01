@@ -3,8 +3,8 @@ using money_tracker.Application.Services;
 
 namespace money_tracker.Application.Interfaces
 {
-    public interface IStoresService
+    public interface ITransactionsService
     {
-        public Task<ServiceResult> AddStore(CreateStoreDto dto, int userId);
+        public Task<ServiceResult> AddTransaction(CreateTransactionDto dto, int userId, int storeId);
     }
 }

@@ -41,7 +41,7 @@ namespace money_tracker.Infrastructure.Repositories
             return await Collection.ToListAsync();
         }
 
-        public virtual async Task<T> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(int id)
         {
             return await Collection.FindAsync(id);
         }

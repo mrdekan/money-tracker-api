@@ -12,6 +12,7 @@
 
 # Settings
 appsettings.json
+appsettings.Production.json
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -23,6 +24,7 @@ mono_crash.*
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
+[Pp]ublish/
 [Rr]eleases/
 x64/
 x86/
@@ -34,6 +36,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+publish.*
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

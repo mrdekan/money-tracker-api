@@ -15,7 +15,7 @@ namespace money_tracker.Application.Services
         public static ServiceResult Ok(object? data = null) =>
             new ServiceResult { Success = true, StatusCode = 200, Data = data };
 
-        public static ServiceResult Fail(string errorMessage, int statusCode = 400) =>
-            new ServiceResult { Success = false, StatusCode = statusCode, ErrorMessage = errorMessage };
+        public static ServiceResult Fail(string errorMessage, HttpCodes statusCode = HttpCodes.BadRequest) =>
+            new ServiceResult { Success = false, StatusCode = (int)statusCode, ErrorMessage = errorMessage };
     }
 }

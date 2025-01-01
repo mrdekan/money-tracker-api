@@ -13,6 +13,6 @@ namespace money_tracker.Application.Dtos.Requests.Jar
 
         [Required(ErrorMessage = "Target is required")]
         [Range(0, double.MaxValue, ErrorMessage = "Target is not negative")]
-        public decimal Target { get; set; }
+        public double Target { get; set; }
     }
 }

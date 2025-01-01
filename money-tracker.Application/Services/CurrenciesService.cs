@@ -1,91 +1,58 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using money_tracker.Application.Dtos.Response.Currencies;
+using money_tracker.Application.Interfaces;
 using money_tracker.Domain.Entities;
 using money_tracker.Infrastructure.Repositories;
 
 namespace money_tracker.Application.Services
 {
-    public class CurrenciesService : BackgroundService
+    public class CurrenciesService : ICurrenciesService
     {
-        private readonly ILogger<CurrenciesService> _logger;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly int _delayMinutes;
-        private readonly string _bankAPI;
+        private readonly CurrenciesRepository _currenciesRepository;
+        private readonly string _baseCurrency;
 
-        public CurrenciesService(ILogger<CurrenciesService> logger, IServiceProvider serviceProvider, IConfiguration configuration)
+        public CurrenciesService(
+            CurrenciesRepository currenciesRepository,
+            IConfiguration configuration
+        )
         {
-            _logger = logger;
-            _serviceProvider = serviceProvider;
-
-            bool parsedDelay = int.TryParse(configuration["Currency:RefreshRate"], out _delayMinutes);
-            if (!parsedDelay)
+            _currenciesRepository = currenciesRepository;
+            _baseCurrency = configuration["Currency:Default"];
+            if (string.IsNullOrEmpty(_baseCurrency))
             {
-                _logger.Log(LogLevel.Warning, "Delay is not parsed");
-                _delayMinutes = 60 * 12; //12 hours
-            }
-
-            _bankAPI = configuration["Currency:API"];
-            if (string.IsNullOrEmpty(_bankAPI))
-            {
-                throw new Exception("Currency API not found in appsettings.json");
+                throw new Exception("Default currency not found in appsettings.json");
             }
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        public async Task<decimal> Convert(decimal amount, string from, string to)
         {
-            _logger.LogInformation("Updating currencies.");
-
-            while (!stoppingToken.IsCancellationRequested)
+            if (to == _baseCurrency)
             {
-                try
-                {
-                    using HttpClient client = new HttpClient();
-
-                    HttpResponseMessage response = await client.GetAsync(_bankAPI);
-                    response.EnsureSuccessStatusCode();
-
-                    string jsonResponse = await response.Content.ReadAsStringAsync();
-
-                    List<CurrencyRate>? rates = JsonSerializer.Deserialize<List<CurrencyRate>>(jsonResponse);
-
-                    if (rates != null)
-                    {
-                        using (var scope = _serviceProvider.CreateScope())
-                        {
-                            var repository = scope.ServiceProvider.GetRequiredService<CurrenciesRepository>();
-                            if (repository != null)
-                            {
-                                await repository.UpdateCurrencies(rates.Select(r => new Currency() { CC = r.cc, Rate = r.rate }).ToList());
-                            }
-                            else
-                            {
-                                _logger.Log(LogLevel.Error, "Error getting CurrencyRepository");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _logger.Log(LogLevel.Error, "Error getting currencies");
-                    }
-                    await Task.Delay(TimeSpan.FromMinutes(_delayMinutes), stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An error occurred while running the scheduler task.");
-                }
+                return await ToBase(amount, from);
             }
+            if (from == _baseCurrency)
+            {
+                return await FromBase(amount, to);
+            }
+            return await FromBase(await ToBase(amount, from), to);
         }
-    }
 
-    public class CurrencyRate
-    {
-        public int r030 { get; set; }
-        public string txt { get; set; } = string.Empty;
-        public double rate { get; set; }
-        public string cc { get; set; } = string.Empty;
-        public string exchangedate { get; set; } = string.Empty;
+        private async Task<decimal> ToBase(decimal amout, string from)
+        {
+            Currency? currency = await _currenciesRepository.GetByNameAsync(from);
+            return currency == null ? 0 : amout * (decimal)currency.Rate;
+        }
+
+        private async Task<decimal> FromBase(decimal amout, string to)
+        {
+            Currency? currency = await _currenciesRepository.GetByNameAsync(to);
+            return currency == null ? 0 : amout / (decimal)currency.Rate;
+        }
+
+        public async Task<ServiceResult> GetAll()
+        {
+            var currencies = await _currenciesRepository.GetAll();
+            return ServiceResult.Ok(currencies.Select(currency => new CurrencyDto(currency)));
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using money_tracker.Application.Dtos.Requests.Stores;
+using money_tracker.Application.Dtos.Response.Stores;
 using money_tracker.Application.Interfaces;
 using money_tracker.Domain.Entities;
 using money_tracker.Infrastructure.Repositories;
@@ -16,28 +17,28 @@ namespace money_tracker.Application.Services
             _jarsRepository = jarsRepository;
         }
 
-        public async Task<ServiceResult> AddStore(CreateStoreDto dto, int userId, int jarId)
+        public async Task<ServiceResult> AddStore(CreateStoreDto dto, int userId)
         {
-            Jar jar = await _jarsRepository.GetByIdAsync(jarId);
+            Jar jar = await _jarsRepository.GetByIdAsync(dto.JarId);
             if (jar == null)
             {
-                return ServiceResult.Fail($"Jar with id {jarId} not found", 404);
+                return ServiceResult.Fail($"Jar with id {dto.JarId} not found", HttpCodes.NotFound);
             }
 
             if (jar.UserId != userId)
             {
-                return ServiceResult.Fail($"You are not this jar's owner");
+                return ServiceResult.Fail($"You are not the owner of this jar", HttpCodes.Forbidden);
             }
 
             Store store = new()
             {
                 Name = dto.Name,
-                JarId = jarId,
+                JarId = dto.JarId,
             };
 
             await _storesRepository.Add(store);
 
-            return ServiceResult.Ok();
+            return ServiceResult.Ok(new StoreDto(store));
         }
     }
 }

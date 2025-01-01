@@ -12,7 +12,15 @@ namespace money_tracker.Infrastructure.Repositories
             _context = context;
         }
 
-        public virtual async Task<Currency> GetByNameAsync(string name)
+        public override async Task<IEnumerable<Currency>> GetAll()
+        {
+            return await _context.Currencies
+                .Include(currency => currency.TargetedJars)
+                .OrderByDescending(currency => currency.TargetedJars.Count())
+                .ToListAsync();
+        }
+
+        public virtual async Task<Currency?> GetByNameAsync(string name)
         {
             return await _context.Currencies.Where(c => c.CC == name).FirstOrDefaultAsync();
         }

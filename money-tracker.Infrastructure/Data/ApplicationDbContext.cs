@@ -31,6 +31,8 @@ namespace money_tracker.Infrastructure.Data
 
             modelBuilder.Entity<Transaction>().ToTable("transactions");
 
+            modelBuilder.Entity<Currency>().ToTable("currencies");
+
             modelBuilder.Entity<Jar>()
                 .HasOne(j => j.User)
                 .WithMany(u => u.Jars)
@@ -53,12 +55,6 @@ namespace money_tracker.Infrastructure.Data
                 .HasOne(t => t.Source)
                 .WithMany(cb => cb.Transactions)
                 .HasForeignKey(t => t.SourceId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CurrencyBalance>()
-                .HasOne(cb => cb.User)
-                .WithMany(u => u.CurrencyBalances)
-                .HasForeignKey(cb => cb.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<CurrencyBalance>()

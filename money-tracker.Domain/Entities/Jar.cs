@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using money_tracker.Domain.Interfaces;
 
@@ -17,11 +16,6 @@ namespace money_tracker.Domain.Entities
         [Required(ErrorMessage = "Target is required")]
         [Range(0, double.MaxValue, ErrorMessage = "Target is not negative")]
         public decimal Target { get; set; }
-
-        [Required(ErrorMessage = "Balance is required")]
-        [Range(0, double.MaxValue, ErrorMessage = "Balance is not negative")]
-        [DefaultValue(0)]
-        public decimal Balance { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
 

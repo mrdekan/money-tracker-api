@@ -15,11 +15,6 @@ namespace money_tracker.Domain.Entities
         [DefaultValue(0)]
         public decimal Balance { get; set; }
 
-        [Required(ErrorMessage = "UserId is required.")]
-        [ForeignKey("User")]
-        public int UserId { get; set; }
-        public User User { get; set; }
-
         [Required(ErrorMessage = "StoreId is required.")]
         [ForeignKey("Store")]
         public int StoreId { get; set; }
