@@ -11,52 +11,29 @@ namespace money_tracker.API.Controllers
     [Route("api/v1/transactions")]
     [ApiController]
     [Authorize]
-    public class TransactionsController : BaseController
+    public class TransactionsController(
+        ITransactionsService transactionsService,
+        UserManager<User> userManager
+    ) : BaseController(userManager)
     {
-        private readonly ITransactionsService _transactionsService;
-
-        public TransactionsController(
-            ITransactionsService transactionsService,
-            UserManager<User> userManager
-        )
-            : base(userManager)
-        {
-            _transactionsService = transactionsService;
-        }
+        private readonly ITransactionsService _transactionsService = transactionsService;
 
         [HttpPost("")]
         public async Task<IActionResult> AddTransaction(CreateTransactionDto dto)
         {
-            var user = await GetCurrentUserAsync();
-            Console.WriteLine(user?.Id);
-            if (user == null)
-            {
-                return Unauthorized();
-            }
+            var userId = await GetUserIdAsync();
 
-            ServiceResult result = await _transactionsService.AddTransaction(dto, user.Id);
-
-            if (!result.Success)
-                return StatusCode(result.StatusCode ?? 400, result);
-
-            return Ok(result);
+            ServiceResult result = await _transactionsService.AddTransaction(dto, userId);
+            return GenerateResponse(result);
         }
 
         [HttpGet("")]
         public async Task<IActionResult> GetMany([FromQuery] TransactionQuery query)
         {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
-            {
-                return Unauthorized();
-            }
+            var userId = await GetUserIdAsync();
 
-            ServiceResult result = await _transactionsService.GetMany(query, user.Id);
-
-            if (!result.Success)
-                return StatusCode(result.StatusCode ?? 400, result);
-
-            return Ok(result);
+            ServiceResult result = await _transactionsService.GetMany(query, userId);
+            return GenerateResponse(result);
         }
     }
 }

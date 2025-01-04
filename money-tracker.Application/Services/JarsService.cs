@@ -1,5 +1,6 @@
 ﻿using money_tracker.Application.Dtos.Requests.Jar;
 using money_tracker.Application.Dtos.Response.Jars;
+using money_tracker.Application.Exceptions;
 using money_tracker.Application.Interfaces;
 using money_tracker.Domain.Entities;
 using money_tracker.Infrastructure.Repositories;
@@ -11,7 +12,6 @@ namespace money_tracker.Application.Services
         private readonly JarsRepository _jarsRepository;
         private readonly CurrenciesRepository _currenciesRepository;
         private readonly CurrencyBalancesRepository _currencyBalancesRepository;
-        private readonly StoresRepository _stocksRepository;
         private readonly ICurrenciesService _currenciesService;
 
         public JarsService(
@@ -59,19 +59,7 @@ namespace money_tracker.Application.Services
 
         public async Task<ServiceResult> GetJar(int userId, int jarId)
         {
-            Jar? jar = await _jarsRepository.GetByIdAsync(jarId);
-            if (jar == null)
-            {
-                return ServiceResult.Fail($"Jar with id {jarId} not found", HttpCodes.NotFound);
-            }
-
-            if (jar.UserId != userId)
-            {
-                return ServiceResult.Fail(
-                    $"You are not the owner of this jar",
-                    HttpCodes.Forbidden
-                );
-            }
+            Jar jar = await GetJarWithAuthorization(jarId, userId);
 
             DetailedJarDto dto = await GetJarWithBalance(jar);
 
@@ -93,20 +81,7 @@ namespace money_tracker.Application.Services
 
         public async Task<ServiceResult> UpdateJar(UpdateJarDto dto, int userId, int jarId)
         {
-            Jar? jar = await _jarsRepository.GetByIdAsync(jarId);
-
-            if (jar == null)
-            {
-                return ServiceResult.Fail($"Jar with id {jarId} not found", HttpCodes.NotFound);
-            }
-
-            if (jar.UserId != userId)
-            {
-                return ServiceResult.Fail(
-                    $"You are not the owner of this jar",
-                    HttpCodes.Forbidden
-                );
-            }
+            Jar jar = await GetJarWithAuthorization(jarId, userId);
 
             if (dto.TargetCurrencyId != null)
             {
@@ -133,24 +108,25 @@ namespace money_tracker.Application.Services
 
         public async Task<ServiceResult> DeleteJar(int userId, int jarId)
         {
-            Jar? jar = await _jarsRepository.GetByIdAsync(jarId);
+            Jar jar = await GetJarWithAuthorization(jarId, userId);
 
-            if (jar == null)
-            {
-                return ServiceResult.Fail($"Jar with id {jarId} not found", HttpCodes.NotFound);
-            }
-
-            if (jar.UserId != userId)
-            {
-                return ServiceResult.Fail(
-                    $"You are not the owner of this jar",
-                    HttpCodes.Forbidden
-                );
-            }
+            DetailedJarDto res = await GetJarWithBalance(jar);
 
             await _jarsRepository.Delete(jar);
 
-            return ServiceResult.Ok(await GetJarWithBalance(jar));
+            return ServiceResult.Ok(res);
+        }
+
+        private async Task<Jar> GetJarWithAuthorization(int jarId, int userId)
+        {
+            var jar = await _jarsRepository.GetByIdAsync(jarId);
+            if (jar == null || jar.UserId != userId)
+            {
+                throw new UnauthorizedUserException(
+                    $"Jar not found or access denied for jar {jarId}"
+                );
+            }
+            return jar;
         }
 
         private async Task<DetailedJarDto> GetJarWithBalance(Jar jar)

@@ -6,14 +6,9 @@ namespace money_tracker.API.Controllers
 {
     [Route("api/v1/currencies")]
     [ApiController]
-    public class CurrenciesController : ControllerBase
+    public class CurrenciesController(ICurrenciesService currenciesService) : ControllerBase
     {
-        private readonly ICurrenciesService _currenciesService;
-
-        public CurrenciesController(ICurrenciesService currenciesService)
-        {
-            _currenciesService = currenciesService;
-        }
+        private readonly ICurrenciesService _currenciesService = currenciesService;
 
         [HttpGet("")]
         public async Task<IActionResult> GetAll()

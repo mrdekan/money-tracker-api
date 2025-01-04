@@ -1,8 +1,10 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using money_tracker.Application.Exceptions;
 using money_tracker.Application.Interfaces;
 using money_tracker.Application.Services;
 using money_tracker.Domain.Entities;
@@ -87,6 +89,19 @@ builder.Services.AddScoped<CurrencyBalancesRepository>();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+        if (exceptionHandlerPathFeature?.Error is UnauthorizedUserException)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsync(exceptionHandlerPathFeature.Error.Message);
+        }
+    });
+});
 
 using (var scope = app.Services.CreateScope())
 {

@@ -11,30 +11,36 @@ namespace money_tracker.API.Controllers
     [Route("api/v1/stores")]
     [ApiController]
     [Authorize]
-    public class StoresController : BaseController
+    public class StoresController(IStoresService storesService, UserManager<User> userManager)
+        : BaseController(userManager)
     {
-        private readonly IStoresService _storesService;
-
-        public StoresController(IStoresService storesService, UserManager<User> userManager)
-            : base(userManager)
-        {
-            _storesService = storesService;
-        }
+        private readonly IStoresService _storesService = storesService;
 
         [HttpPost("")]
         public async Task<IActionResult> CreateStore(CreateStoreDto dto)
         {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
-            {
-                return Unauthorized();
-            }
-            ServiceResult result = await _storesService.AddStore(dto, user.Id);
+            var userId = await GetUserIdAsync();
 
-            if (!result.Success)
-                return StatusCode(result.StatusCode ?? 400, result);
+            ServiceResult result = await _storesService.AddStore(dto, userId);
+            return GenerateResponse(result);
+        }
 
-            return Ok(result);
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateStore(UpdateStoreDto dto, int id)
+        {
+            var userId = await GetUserIdAsync();
+
+            ServiceResult result = await _storesService.UpdateStore(dto, userId, id);
+            return GenerateResponse(result);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteStore(int id)
+        {
+            var userId = await GetUserIdAsync();
+
+            ServiceResult result = await _storesService.DeleteStore(userId, id);
+            return GenerateResponse(result);
         }
     }
 }
