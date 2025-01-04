@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +8,7 @@ using money_tracker.Application.Services;
 using money_tracker.Domain.Entities;
 using money_tracker.Infrastructure.Data;
 using money_tracker.Infrastructure.Repositories;
+using money_tracker.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +32,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 );
 
 builder
-    .Services.AddIdentity<User, IdentityRole<int>>()
+    .Services.AddIdentity<User, IdentityRole<int>>(options =>
+    {
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 8;
+    })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
@@ -57,6 +65,9 @@ builder
         };
     });
 
+builder.Services.AddMemoryCache();
+
+builder.Services.AddSingleton<ConfigManager>();
 builder.Services.AddHostedService<CurrenciesUpdaterService>();
 
 builder.Services.AddScoped<IJarsService, JarsService>();
@@ -66,6 +77,7 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<ITransactionsService, TransactionsService>();
 builder.Services.AddScoped<ICurrenciesService, CurrenciesService>();
 
+builder.Services.AddScoped<DbTransaction>();
 builder.Services.AddScoped<JarsRepository>();
 builder.Services.AddScoped<CurrenciesRepository>();
 builder.Services.AddScoped<StoresRepository>();

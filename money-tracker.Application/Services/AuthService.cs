@@ -39,14 +39,17 @@ namespace money_tracker.Application.Services
             var user = new User
             {
                 Email = dto.Email,
-                UserName = dto.Email.Split("@")[0]
+                UserName = dto.Email.Split("@")[0] + Guid.NewGuid(),
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
 
             if (!result.Succeeded)
             {
-                return ServiceResult.Fail(string.Join(", ", result.Errors.Select(e => e.Description)), HttpCodes.BadRequest);
+                return ServiceResult.Fail(
+                    string.Join(", ", result.Errors.Select(e => e.Description)),
+                    HttpCodes.BadRequest
+                );
             }
 
             var token = _jwtService.GenerateJwtToken(user);

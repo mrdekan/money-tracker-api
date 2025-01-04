@@ -1,6 +1,4 @@
-﻿
-
-using money_tracker.Domain.Entities;
+﻿using money_tracker.Domain.Entities;
 
 namespace money_tracker.Application.Dtos.Response.Transactions
 {
@@ -11,7 +9,7 @@ namespace money_tracker.Application.Dtos.Response.Transactions
             Id = entity.Id;
             Amount = entity.Amount;
             Currency = currency;
-            Type = entity.Type.ToString();
+            Type = (int)entity.Type;
             Comment = entity.Comment;
             CreatedAt = entity.CreatedAt;
         }
@@ -19,7 +17,7 @@ namespace money_tracker.Application.Dtos.Response.Transactions
         public int Id { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; }
-        public string Type { get; set; }
+        public int Type { get; set; }
         public string Comment { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
     }

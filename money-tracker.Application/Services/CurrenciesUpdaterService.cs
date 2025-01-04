@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,31 +18,14 @@ namespace money_tracker.Application.Services
         public CurrenciesUpdaterService(
             ILogger<CurrenciesUpdaterService> logger,
             IServiceProvider serviceProvider,
-            IConfiguration configuration
+            ConfigManager configuration
         )
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
-
-            bool parsedDelay = int.TryParse(
-                configuration["Currency:RefreshRate"],
-                out _delayMinutes
-            );
-            if (!parsedDelay)
-            {
-                _logger.Log(LogLevel.Warning, "Delay is not parsed");
-                _delayMinutes = 60 * 12; //12 hours
-            }
-            _baseCurrency = configuration["Currency:Default"];
-            if (string.IsNullOrEmpty(_baseCurrency))
-            {
-                throw new Exception("Default currency not found in appsettings.json");
-            }
-            _bankAPI = configuration["Currency:API"];
-            if (string.IsNullOrEmpty(_bankAPI))
-            {
-                throw new Exception("Currency API not found in appsettings.json");
-            }
+            _delayMinutes = configuration.CurrencyUpdateDelayMinutes;
+            _baseCurrency = configuration.BaseCurrency;
+            _bankAPI = configuration.BankAPI;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

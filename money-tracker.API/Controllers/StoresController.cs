@@ -14,12 +14,11 @@ namespace money_tracker.API.Controllers
     public class StoresController : BaseController
     {
         private readonly IStoresService _storesService;
-        private readonly ITransactionsService _transactionsService;
 
-        public StoresController(IStoresService storesService, ITransactionsService transactionsService, UserManager<User> userManager) : base(userManager)
+        public StoresController(IStoresService storesService, UserManager<User> userManager)
+            : base(userManager)
         {
             _storesService = storesService;
-            _transactionsService = transactionsService;
         }
 
         [HttpPost("")]
@@ -31,23 +30,6 @@ namespace money_tracker.API.Controllers
                 return Unauthorized();
             }
             ServiceResult result = await _storesService.AddStore(dto, user.Id);
-
-            if (!result.Success)
-                return StatusCode(result.StatusCode ?? 400, result);
-
-            return Ok(result);
-        }
-
-        [HttpPost("{id}")]
-        public async Task<IActionResult> AddTransaction(CreateTransactionDto dto, int id)
-        {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
-            {
-                return Unauthorized();
-            }
-
-            ServiceResult result = await _transactionsService.AddTransaction(dto, user.Id, id);
 
             if (!result.Success)
                 return StatusCode(result.StatusCode ?? 400, result);

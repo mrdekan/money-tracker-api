@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using money_tracker.Application.Dtos.Response.Currencies;
+﻿using money_tracker.Application.Dtos.Response.Currencies;
 using money_tracker.Application.Interfaces;
 using money_tracker.Domain.Entities;
 using money_tracker.Infrastructure.Repositories;
@@ -13,15 +12,16 @@ namespace money_tracker.Application.Services
 
         public CurrenciesService(
             CurrenciesRepository currenciesRepository,
-            IConfiguration configuration
+            ConfigManager configuration
         )
         {
             _currenciesRepository = currenciesRepository;
-            _baseCurrency = configuration["Currency:Default"];
-            if (string.IsNullOrEmpty(_baseCurrency))
-            {
-                throw new Exception("Default currency not found in appsettings.json");
-            }
+            _baseCurrency = configuration.BaseCurrency;
+        }
+
+        public async Task<string> GetName(int id)
+        {
+            return (await _currenciesRepository.GetByIdAsync(id)).CC;
         }
 
         public async Task<decimal> Convert(decimal amount, string from, string to)
@@ -37,16 +37,45 @@ namespace money_tracker.Application.Services
             return await FromBase(await ToBase(amount, from), to);
         }
 
+        public async Task<decimal> Convert(decimal amount, int from, int to)
+        {
+            Currency? toCurrency = await _currenciesRepository.GetByIdAsync(from);
+            Currency? fromCurrency = await _currenciesRepository.GetByIdAsync(from);
+            if (toCurrency == null || fromCurrency == null)
+            {
+                return 0;
+            }
+            if (toCurrency.CC == _baseCurrency)
+            {
+                return ToBase(amount, fromCurrency);
+            }
+            if (fromCurrency.CC == _baseCurrency)
+            {
+                return FromBase(amount, toCurrency);
+            }
+            return FromBase(ToBase(amount, fromCurrency), toCurrency);
+        }
+
         private async Task<decimal> ToBase(decimal amout, string from)
         {
             Currency? currency = await _currenciesRepository.GetByNameAsync(from);
-            return currency == null ? 0 : amout * (decimal)currency.Rate;
+            return currency == null ? 0 : ToBase(amout, currency);
         }
 
         private async Task<decimal> FromBase(decimal amout, string to)
         {
             Currency? currency = await _currenciesRepository.GetByNameAsync(to);
-            return currency == null ? 0 : amout / (decimal)currency.Rate;
+            return currency == null ? 0 : FromBase(amout, currency);
+        }
+
+        private decimal ToBase(decimal amout, Currency from)
+        {
+            return amout * (decimal)from.Rate;
+        }
+
+        private decimal FromBase(decimal amout, Currency to)
+        {
+            return amout / (decimal)to.Rate;
         }
 
         public async Task<ServiceResult> GetAll()

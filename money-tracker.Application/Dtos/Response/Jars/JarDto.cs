@@ -12,7 +12,6 @@ namespace money_tracker.Application.Dtos.Response.Jars
             Balance = 0;
             TargetCurrency = entity.TargetCurrency.CC;
             Target = entity.Target;
-            Progress = 0;
         }
 
         public JarDto(
@@ -39,13 +38,11 @@ namespace money_tracker.Application.Dtos.Response.Jars
                 }
             }
             Target = entity.Target;
-            Progress = (double)Math.Min(100, (Balance / Target) * 100);
         }
 
         public int Id { get; set; }
         public string Name { get; set; }
         public decimal Balance { get; set; }
-        public double Progress { get; set; }
         public decimal Target { get; set; }
         public string TargetCurrency { get; set; }
     }
